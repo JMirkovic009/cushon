@@ -1,0 +1,31 @@
+{
+  "get": [
+    {
+      "email": "faker.test@123.com",
+      "password": "Password555",
+      "userId": 12345,
+      "amount": 400,
+      "fixed": true
+    },
+
+    {
+      "email": "evenFaker.lies@123.com",
+      "password": "Password666",
+      "userId": 24680,
+      "amount": 250,
+      "fixed": true
+    },
+    {
+      "email": "mrRobot@gmail.com",
+      "password": "$£FSDG$W%GGS%$YSH",
+      "userId": 13579,
+      "amount": 6,
+      "fixed": false
+    }
+  ],
+  "post": {
+    "email": "mrsRobot@gmail.com",
+    "password": "G$%^$%RTHG$%",
+    "userId": 11223344
+  }
+}
