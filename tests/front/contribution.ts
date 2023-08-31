@@ -13,22 +13,27 @@ let homepage;
 let adjustment;
 
 test.describe("When logging into the platform", () => {
+  //cycling through each user in our json data
   let accounts = userData.get;
   accounts.forEach((user) => {
     test.beforeEach(async ({ page }) => {
-      clientLogin = new ClientLogin(page);
+      //before each to get us to a state for the folowing tests of checking the contributions
+      clientLogin = new ClientLogin(page); //initiate the POMS
       homepage = new homepage(page);
-      await clientLogin.loginUser(user.email, user.password);
-      await expect(homepage.myAccountButton).toBeVisible();
+      await clientLogin.loginUser(user.email, user.password); //log in with the userData provided
+      await expect(homepage.myAccountButton).toBeVisible(); //when this is visible, log in has been successful
     });
 
     test("I can view my monthly contributions and they display the correct values", async () => {
       let type;
       if (user.fixed === false) {
+        //checks which type to expect based on userData
         type = "Percentage";
       } else {
         type = "Monthly Fixed";
       }
+
+      //validating the contributions to check they are as expected
       await expect(homepage.contributionType).toBe(type);
       await expect(homepage.contributionValue).toBe(user.amount);
     });
@@ -54,6 +59,7 @@ test.describe("When trying to update my monthly contribution", () => {
     await adjustment.changeContAmount.selectOption(newAmount);
     await clickButtonByName(page, "Submit");
 
+    //assert that the modal appears showing we have updated our contributions
     await expect(page.locator(".modal").locator(".modalBody")).toContainText(
       "Your contributions have been updated"
     );
@@ -65,6 +71,14 @@ test.describe("When trying to update my monthly contribution", () => {
 
     await expect(contributionType).toBe("Fixed");
     await expect(contributionValue).toBe(newAmount.toString());
+
+    //writing a query that will get me the clients details
+    let query = `SELECT rateType, amount FROM client.userData where userData = ${userData.post.userId}`;
+    let res = await queryDb(query);
+
+    //checking that the details match the ones we have set out at the start of the test
+    await expect(res[0].rateType).toBe(type);
+    await expect(res[0].amount).toBe(newAmount);
   });
 
   test("I can update my contribution to a percentage rate", async ({
@@ -114,24 +128,21 @@ test.describe("When trying to update my monthly contribution", () => {
     }) => {
       let amount;
 
+      //turnary to  decide if the amount needs to be a percentage or an fixed amount
       type == "fixed" ? (amount = 20.1) : (amount = 250.7);
 
       await clickButtonByName(page, "Update Contribution");
       await expect(page.locator("#input.contribution")).toBeVisible();
 
+      //entering the contribution type
       await adjustment.changeContType.selectOption(type);
-      await adjustment.changeContAmount.selectOption(amount);
+      //entering the contribution amount
+      await adjustment.changeContAmount.fill(amount);
       await expect(await page.locator("div.warning").textContent()).toBe(
         "You must enter an exact number for a contribution"
       );
 
       await expect(page.getByRole("button", { name: "Submit" })).toBeDisabled();
-
-      let query = `SELECT rateType, amount FROM client.userData where userData = ${userData.post.userId}`;
-      let res = await queryDb(query);
-
-      await expect(res[0].rateType).toBe(type);
-      await expect(res[0].amount).toBe(amount);
     });
   });
 });
