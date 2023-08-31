@@ -4,6 +4,7 @@ import { HomePage } from "../../POM/homepage";
 import { beforeEach } from "node:test";
 import { clickButtonByName } from "../../utils/navigationHelper";
 import { getRandomInt } from "../../utils/dataHelper";
+import { queryDb } from "../../utils/sqlHelper";
 
 const userData = require("../../data/accountData.json");
 
@@ -125,6 +126,12 @@ test.describe("When trying to update my monthly contribution", () => {
       );
 
       await expect(page.getByRole("button", { name: "Submit" })).toBeDisabled();
+
+      let query = `SELECT rateType, amount FROM client.userData where userData = ${userData.post.userId}`;
+      let res = await queryDb(query);
+
+      await expect(res[0].rateType).toBe(type);
+      await expect(res[0].amount).toBe(amount);
     });
   });
 });

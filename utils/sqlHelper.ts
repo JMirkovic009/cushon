@@ -21,7 +21,7 @@ export function createDbConnection(db: string = "client") {
   return dbConnection;
 }
 
-export async function queryDB(query): Promise<Object> {
+export async function queryDb(query): Promise<Object> {
   // creates a new mysql connection using credentials from cypress.json env's
   // start connection to db
   const dbConnection = createDbConnection();

@@ -1,5 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { getRandomInt } from "../../utils/dataHelper";
+import { queryDb } from "../../utils/sqlHelper";
 
 const userData = require("../../data/accountData.json");
 
@@ -22,12 +23,22 @@ test.describe("When reaching the post account endpoint", () => {
 
     await expect(response.status()).toBe(201);
 
+    if (response.status() !== 200) {
+      throw new Error(
+        `Failed to update contribution. Status code: ${response.status()}`
+      );
+    }
+
     const respBody = await response.json();
     await expect(respBody.accountId).toBe(userData.post.userId);
     await expect(respBody.contribution.fixed).toBe(fixed);
     await expect(respBody.contribution.amount).toBe(amount);
 
-    //if I had access to a SQL server I would then run a query and assert against the response, checking that the database had indeed updated
+    let query = `SELECT rateType, amount FROM client.userData where userData = ${userData.post.userId}`;
+    let res = await queryDb(query);
+
+    await expect(res[0].rateType).toBe("fixed");
+    await expect(res[0].amount).toBe(amount);
   });
 
   test("I can not POST an amount that is not a whole number", async ({
@@ -45,7 +56,6 @@ test.describe("When reaching the post account endpoint", () => {
     });
 
     await expect(response.status()).toBe(422);
-
     const respBody = await response.json();
     await expect(respBody.error).toBe(`${value} is not a valid amount`);
     await expect(respBody.message).toBe("please enter an integer as an amount");
